@@ -352,10 +352,56 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION: I wanted winning to be REALLY good and losing to be REALLY bad.
+      I used my reflex evaluation function to determine important values such as
+      the number of food left, the distance to the closest food, and the distance
+      of the closest ghost. I put a hard cap on the ghost distance because I did not
+      want my agent to be super obsessed with maximizing survivability since time is
+      deducted from score. The rest was just adjusting weights correspondingly.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    successorGameState = currentGameState
+    newPos = successorGameState.getPacmanPosition()
+    newFood = successorGameState.getFood()
+    newGhostStates = successorGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+
+    newGhostPositions = successorGameState.getGhostPositions()
+    food = currentGameState.getNumFood()
+
+    if successorGameState.isWin():
+        return 9999999
+    if successorGameState.isLose():
+        return -9999999
+
+    minFoodDist = 0
+    dist = 0
+    sizeX = 0
+    sizeY = 0
+    for i in newFood:
+        sizeY = len(i)
+        sizeX += 1
+    for i in range(0, sizeX):
+        for j in range(0, sizeY):
+            if newFood[i][j] == True:
+                dist = abs(newPos[1] - j) + abs(newPos[0] - i)
+                if minFoodDist == 0:
+                    minFoodDist = dist
+                else:
+                    minFoodDist = min(minFoodDist, dist)
+
+    minGhostDist = 0
+    for i in newGhostPositions:
+        dist = abs(newPos[1] - i[1]) + abs(newPos[0] - i[0])
+        if minGhostDist == 0:
+            minGhostDist = dist
+        else:
+            minGhostDist = min(minGhostDist, dist)
+
+    if minGhostDist > 5:
+        minGhostDist = 5
+
+    return scoreEvaluationFunction(currentGameState) - minFoodDist - food * 5 - 3 * len(currentGameState.getCapsules()) + minGhostDist
 
 # Abbreviation
 better = betterEvaluationFunction
