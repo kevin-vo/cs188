@@ -101,7 +101,31 @@ def joinFactors(factors):
 
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    unconditionedSet = set()
+    conditionedSet = set()
+    variableDomainsDict = {}
+    for factor in factors:
+        for assignment in factor.variableDomainsDict():
+            variableDomainsDict[assignment] = factor.variableDomainsDict()[assignment]
+            #print(variableDomainsDict)
+        for unconditionedVariable in factor.unconditionedVariables():
+            unconditionedSet.add(unconditionedVariable)
+        for conditionedVariable in factor.conditionedVariables():
+            conditionedSet.add(conditionedVariable)
+    for var in unconditionedSet:
+        if var in conditionedSet:
+            conditionedSet.remove(var)
+    newFactor = Factor(list(unconditionedSet), list(conditionedSet), variableDomainsDict)
+    
+    for assignment in newFactor.getAllPossibleAssignmentDicts():
+        prob = 1
+        for factor in factors:
+            prob = prob * factor.getProbability(assignment)
+        newFactor.setProbability(assignment, prob)
+        
+    return newFactor
+        
+    
 
 
 def eliminateWithCallTracking(callTrackingList=None):
@@ -150,8 +174,26 @@ def eliminateWithCallTracking(callTrackingList=None):
                     "unconditionedVariables: " + str(factor.unconditionedVariables()))
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        unconditionedList = factor.unconditionedVariables()
+        unconditionedList.remove(eliminationVariable)
+        conditionedList = factor.conditionedVariables()
+        newFactor = Factor(unconditionedList, conditionedList, factor.variableDomainsDict())
+        
+        for assignment in newFactor.getAllPossibleAssignmentDicts():
+            #print assignment
+            #print eliminationVariable
+            #print newFactor.getProbability(assignment)
+            #print factor.variableDomainsDict()
+            prob = 0
+            for val in factor.variableDomainsDict()[eliminationVariable]:
+                includeElim = assignment
+                assignment[eliminationVariable] = val
+                prob += factor.getProbability(includeElim)
+            newFactor.setProbability(assignment, prob)
+        
+        return newFactor
+        
+        
     return eliminate
 
 eliminate = eliminateWithCallTracking()
@@ -205,5 +247,23 @@ def normalize(factor):
                             str(factor))
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+   # print factor.getAllPossibleAssignmentDicts()
+   # print factor.variableDomainsDict()
+    sumOfProbs = 0
+    for assignment in factor.getAllPossibleAssignmentDicts():
+        #print factor.getProbability(assignment)
+        sumOfProbs += factor.getProbability(assignment)
+        
+    unconditionedSet = factor.unconditionedVariables().copy()
+    conditionedSet = factor.conditionedVariables().copy()
+    for var in factor.unconditionedVariables():
+        #print(var)
+        #print(factor.variableDomainsDict()[var])
+        if len(factor.variableDomainsDict()[var]) == 1:
+            conditionedSet.add(var)
+            unconditionedSet.remove(var)
+    newFactor = Factor(list(unconditionedSet), list(conditionedSet), factor.variableDomainsDict())
+    for assignment in newFactor.getAllPossibleAssignmentDicts():
+        newFactor.setProbability(assignment, factor.getProbability(assignment) / sumOfProbs)
+    return newFactor
 

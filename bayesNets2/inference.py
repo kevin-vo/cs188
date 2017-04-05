@@ -131,7 +131,32 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
             eliminationOrder = sorted(list(eliminationVariables))
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #print evidenceDict
+        #print bayesNet.getAllCPTsWithEvidence(evidenceDict) #returns list of factors
+        #print "----------"
+        factorList = bayesNet.getAllCPTsWithEvidence(evidenceDict)
+        #print factorList
+        joined = joinFactors(factorList)
+        #print eliminationOrder
+        for var in eliminationOrder:
+
+            joinedFactors = joinFactorsByVariable(factorList, var)
+            currentFactorsNotToJoin = joinedFactors[0]
+            resultFactor = joinedFactors[1]
+            factorList = currentFactorsNotToJoin
+            # print resultFactor.unconditionedVariables()
+            # print var
+            if len(resultFactor.unconditionedVariables()) > 1:
+                # factorList.append(resultFactor)
+                #joined = joinFactors(factorList)
+                joined = eliminate(resultFactor, var)
+                # factorList.remove(resultFactor)
+                factorList.append(joined)
+            else:
+                joined = joinFactors(factorList)
+
+        joined = joinFactors(factorList)
+        return normalize(joined)
 
 
     return inferenceByVariableElimination
