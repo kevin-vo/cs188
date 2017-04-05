@@ -307,9 +307,22 @@ def getMostLikelyFoodHousePosition(evidence, bayesNet, eliminationOrder):
     (This should be a very short method.)
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    
+    """
+    Useful functions:
+    Factor.getAllPossibleAssignmentDicts
+    Factor.getProbability
+    Factor.setProbability
+    Factor.unconditionedVariables
+    Factor.conditionedVariables
+    Factor.variableDomainsDict
+    """
+    factor = inference.inferenceByVariableElimination(bayesNet, HOUSE_VARS, evidence, eliminationOrder)
+    #print factor.getAllPossibleAssignmentDicts()
+    return max([(a, factor.getProbability(a)) for a in factor.getAllPossibleAssignmentDicts()], key = lambda x: x[1])[0]
+   # print factor
 
-
+    
 class BayesAgent(game.Agent):
 
     def registerInitialState(self, gameState):
@@ -409,8 +422,60 @@ class VPIAgent(BayesAgent):
         rightExpectedValue = 0
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        """
+        X_POS_VAR = "xPos"
+        FOOD_LEFT_VAL = "foodLeft"
+        GHOST_LEFT_VAL = "ghostLeft"
+        X_POS_VALS = [FOOD_LEFT_VAL, GHOST_LEFT_VAL]
+        
+        Y_POS_VAR = "yPos"
+        BOTH_TOP_VAL = "bothTop"
+        BOTH_BOTTOM_VAL = "bothBottom"
+        LEFT_TOP_VAL = "leftTop"
+        LEFT_BOTTOM_VAL = "leftBottom"
+        Y_POS_VALS = [BOTH_TOP_VAL, BOTH_BOTTOM_VAL, LEFT_TOP_VAL, LEFT_BOTTOM_VAL]
+        
+        FOOD_HOUSE_VAR = "foodHouse"
+        GHOST_HOUSE_VAR = "ghostHouse"
+        HOUSE_VARS = [FOOD_HOUSE_VAR, GHOST_HOUSE_VAR]
+        
+        TOP_LEFT_VAL = "topLeft"
+        TOP_RIGHT_VAL = "topRight"
+        BOTTOM_LEFT_VAL = "bottomLeft"
+        BOTTOM_RIGHT_VAL = "bottomRight"
+        HOUSE_VALS = [TOP_LEFT_VAL, TOP_RIGHT_VAL, BOTTOM_LEFT_VAL, BOTTOM_RIGHT_VAL]
+        
+        OBS_VAR_TEMPLATE = "obs(%d,%d)"
+        
+        BLUE_OBS_VAL = "blue"
+        RED_OBS_VAL = "red"
+        NO_OBS_VAL = "none"
+        OBS_VALS = [BLUE_OBS_VAL, RED_OBS_VAL, NO_OBS_VAL]
+        
+        ENTER_LEFT = 0
+        ENTER_RIGHT = 1
+        EXPLORE = 2
+        
+        First compute p(foodHouse = topLeft and ghostHouse = topRight | evidence) and 
+        p(foodHouse = topRight and ghostHouse = topLeft | evidence). Then use these two 
+        probabilities to compute expected values for rushing left and rushing right.
+        
+        GHOST_COLLISION_REWARD, WON_GAME_REWARD
+        """
+        leftDict = dict(evidence)
+        leftDict[FOOD_HOUSE_VAR] = TOP_LEFT_VAL
+        leftDict[GHOST_HOUSE_VAR] = TOP_RIGHT_VAL
+        
+        rightDict = dict(evidence)
+        rightDict[FOOD_HOUSE_VAR] = TOP_RIGHT_VAL
+        rightDict[GHOST_HOUSE_VAR] = TOP_LEFT_VAL
+        
+        factor = inference.inferenceByVariableElimination(self.bayesNet, HOUSE_VARS, evidence, eliminationOrder)
+        
+        leftFoodProb = factor.getProbability(leftDict)
+        rightFoodProb = factor.getProbability(rightDict)
+        leftExpectedValue =  leftFoodProb * WON_GAME_REWARD + rightFoodProb * GHOST_COLLISION_REWARD
+        rightExpectedValue = rightFoodProb * WON_GAME_REWARD + leftFoodProb * GHOST_COLLISION_REWARD
         return leftExpectedValue, rightExpectedValue
 
     def getExplorationProbsAndOutcomes(self, evidence):
@@ -475,8 +540,12 @@ class VPIAgent(BayesAgent):
         expectedValue = 0
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        #print self.getExplorationProbsAndOutcomes(evidence)
+        probsAndOutcomes = self.getExplorationProbsAndOutcomes(evidence)
+        for prob, outcome in probsAndOutcomes:
+            #print prob
+            #print outcome
+            expectedValue += prob * max(self.computeEnterValues(outcome, enterEliminationOrder))
         return expectedValue
 
     def getAction(self, gameState):

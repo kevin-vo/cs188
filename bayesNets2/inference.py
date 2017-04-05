@@ -136,7 +136,6 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
         #print "----------"
         factorList = bayesNet.getAllCPTsWithEvidence(evidenceDict)
         #print factorList
-        joined = joinFactors(factorList)
         #print eliminationOrder
         for var in eliminationOrder:
 
@@ -152,8 +151,8 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
                 joined = eliminate(resultFactor, var)
                 # factorList.remove(resultFactor)
                 factorList.append(joined)
-            else:
-                joined = joinFactors(factorList)
+            # else:
+            #     joined = joinFactors(factorList)
 
         joined = joinFactors(factorList)
         return normalize(joined)
