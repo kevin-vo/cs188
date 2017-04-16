@@ -17,6 +17,7 @@ import random
 import busters
 import game
 
+import util
 from util import manhattanDistance
 from random import randint
 
@@ -103,12 +104,12 @@ class DiscreteDistribution(dict):
         0.0
         """
         "*** YOUR CODE HERE ***"
-        randomNum = random.uniform(0, self.total())
-        for sample, value in sorted(self.items()):
-            if randomNum < value:
+        self.normalize()
+        randomNum = random.random()
+        for sample, value in (self.items()):
+            if randomNum <= value:
                 return sample
             randomNum -= value
-
 
 class InferenceModule:
     """
@@ -374,7 +375,7 @@ class ParticleFilter(InferenceModule):
         pacmanPosition = gameState.getPacmanPosition()
         jailPosition = self.getJailPosition()
         beliefs = self.getBeliefDistribution()
-        for ghostPosition in self.legalPositions:
+        for ghostPosition in beliefs:
             observationProb = self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
             beliefs[ghostPosition] = beliefs[ghostPosition] * observationProb
         beliefs.normalize()
@@ -392,6 +393,13 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         "*** YOUR CODE HERE ***"
+        beliefs = self.getBeliefDistribution()
+        newParticles = []
+        counter = 0
+        for oldPos in self.particles:
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            newParticles.append(newPosDist.sample())
+        self.particles = newParticles
 
     def getBeliefDistribution(self):
         """
@@ -430,8 +438,18 @@ class JointParticleFilter(ParticleFilter):
         should be evenly distributed across positions in order to ensure a
         uniform prior.
         """
+        positionsProduct = itertools.product(self.legalPositions, repeat = self.numGhosts)
+        positionsProduct = list(positionsProduct)
+        random.shuffle(positionsProduct)
+        # print positionsProduct
         self.particles = []
         "*** YOUR CODE HERE ***"
+        index = 0
+        for _ in range(0, self.numParticles):
+            if index == len(positionsProduct):
+                index = 0
+            self.particles.append(positionsProduct[index])
+            index += 1
 
     def addGhostAgent(self, agent):
         """
