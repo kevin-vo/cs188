@@ -481,7 +481,25 @@ class JointParticleFilter(ParticleFilter):
         be reinitialized by calling initializeUniformly. The total method of
         the DiscreteDistribution may be useful.
         """
-        "*** YOUR CODE HERE ***"
+        pacmanPosition = gameState.getPacmanPosition()
+        beliefs = DiscreteDistribution()
+        for ghostPositionTuple in self.particles:
+            totalProb = 1
+            for ghostNum in range(self.numGhosts):
+                obs = observation[ghostNum]
+                jailPosition = self.getJailPosition(ghostNum)
+                ghostPosition = ghostPositionTuple[ghostNum]
+                observationProb = self.getObservationProb(obs, pacmanPosition, ghostPosition, jailPosition)
+                totalProb *= observationProb
+            beliefs[ghostPositionTuple] = beliefs[ghostPositionTuple] + totalProb
+        beliefs.normalize()
+        if beliefs.total() == 0:
+            self.initializeUniformly(gameState)
+        else:
+            newParticles = []
+            for _ in range(len(self.particles)):
+                newParticles.append(beliefs.sample())
+            self.particles = newParticles
 
     def elapseTime(self, gameState):
         """
@@ -494,7 +512,16 @@ class JointParticleFilter(ParticleFilter):
 
             # now loop through and update each entry in newParticle...
             "*** YOUR CODE HERE ***"
-
+            # newParticles = []
+            # for oldPos in self.particles:
+            #     newPosDist = self.getPositionDistribution(gameState, oldPos)
+            #     newParticles.append(newPosDist.sample())
+            # self.particles = newParticles
+            samples = []
+            for ghostNum in range(self.numGhosts):
+                newPosDist = self.getPositionDistribution(gameState, newParticle, ghostNum, self.ghostAgents[ghostNum])
+                samples.append(newPosDist.sample())
+            newParticle = samples
             """*** END YOUR CODE HERE ***"""
             newParticles.append(tuple(newParticle))
         self.particles = newParticles
